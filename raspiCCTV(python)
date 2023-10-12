@@ -6,7 +6,7 @@ import datetime
 
 stream_url = "rtsp://your_stream_url"
 output_dir = "output_directory"
-segment_duration = 1800  # 세그먼트 길이(초), 30분은 1800초
+segment_duration = 1800  # 30minite
 
 while True:
     current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

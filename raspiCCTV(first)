@@ -1,0 +1,30 @@
+rsapi CCTV streaming
+
+import subprocess
+import time
+import datetime
+
+stream_url = "rtsp://your_stream_url"
+output_dir = "output_directory"
+segment_duration = 1800  # 세그먼트 길이(초), 30분은 1800초
+
+while True:
+    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = f"{output_dir}/recording_{current_time}.mp4"
+
+    ffmpeg_command = [
+        "ffmpeg",
+        "-i", stream_url,
+        "-t", str(segment_duration),
+        "-c:v", "copy",
+        "-c:a", "copy",
+        output_file
+    ]
+
+    try:
+        subprocess.run(ffmpeg_command, check=True)
+        print(f"Recording completed: {output_file}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error recording: {e}")
+    
+    time.sleep(segment_duration)

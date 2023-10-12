@@ -1,0 +1,14 @@
+#!/bin/bash
+
+stream_url="rtsp://your_stream_url"
+output_dir="output_directory"  # recordfile directory
+segment_duration="1800"        # 30m
+
+while true; do
+    current_time=$(date +"%Y%m%d_%H%M%S")
+    output_file="${output_dir}/recording_${current_time}.mp4"
+
+    ffmpeg -i "$stream_url" -t "$segment_duration" -c:v copy -c:a copy "$output_file"
+
+    echo "Recording completed: $output_file"
+done

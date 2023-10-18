@@ -1,0 +1,127 @@
+//라즈베리 파이부
+import subprocess
+import datetime
+import signal
+import sys
+
+def start_rtsp_server_and_record():
+    //vlc를 통한 스트리밍부분
+    current_time = datetime.datetime.now().strftime("%Y.%m.%d_%H%M%S")
+    rtsp_server_command = [
+        "/home/jungbo/cctv/v4l2rtspserver",
+        "-F", "25",
+        "-W", "1280",
+        "-H", "720",
+        "-P", "8555",
+        "/dev/video0"
+    ]
+
+    //vlc를 통한 녹화부
+    vlc_command = [
+        "cvlc",
+        "rtsp://localhost:8555/stream",
+        "--sout",
+        f"#transcode{{vcodec=h264,acodec=mpga,ab=128,channels=2,samplerate=44100}}:std{{access=file,mux=ts,dst=/home/jungbo/cctv/{current_time}_stream.ts}}"
+    ]
+
+    rtsp_process = subprocess.Popen(rtsp_server_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vlc_process = subprocess.Popen(vlc_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    try:
+        rtsp_stdout, rtsp_stderr = rtsp_process.communicate()
+        vlc_stdout, vlc_stderr = vlc_process.communicate()
+
+        print("RTSP stdout:", rtsp_stdout.decode("utf-8"))
+        print("RTSP stderr:", rtsp_stderr.decode("utf-8"))
+        print("VLC stdout:", vlc_stdout.decode("utf-8"))
+        print("VLC stderr:", vlc_stderr.decode("utf-8"))
+
+        if rtsp_process.returncode != 0:
+            print("RTSP Server Error:", rtsp_stderr.decode("utf-8"))
+        else:
+            print("RTSP server started successfully.")
+
+        if vlc_process.returncode != 0:
+            print("VLC Error:", vlc_stderr.decode("utf-8"))
+        else:
+            print("VLC recording started successfully.")
+
+    except KeyboardInterrupt:
+        print("Script interrupted. Stopping processes...")
+        rtsp_process.send_signal(signal.SIGINT)
+        vlc_process.send_signal(signal.SIGINT)
+        rtsp_process.wait()
+        vlc_process.wait()
+        print("Processes stopped.")
+
+if __name__ == "__main__":
+    start_rtsp_server_and_record()
+
+
+
+//PC메인 녹화부
+import subprocess
+import time from datetime
+import datetime, timedelta
+
+# 확인 시간 (초) 설정
+check_interval = 10  # 매 10초마다 확인
+
+# 녹화 간격 (초) 설정
+record_interval = 30 * 60  # 30분 (초 단위)
+
+vlc_stream_url = "스트림_URL"  # 실제 스트림의 URL로 바꾸세요
+
+while True:
+    # 현재 날짜와 시간을 기반으로 파일명 생성
+    now = datetime.now()
+    date_time = now.strftime("%Y%m%d-%H%M%S")
+    output_file = f"{date_time}.mp4"
+
+    # VLC를 실행하여 스트림 확인
+    vlc_cmd = ["vlc", vlc_stream_url]
+    vlc_process = subprocess.Popen(vlc_cmd)
+
+    # 녹화 시작 시간 기록
+    record_start_time = datetime.now()
+
+    while True:
+        time.sleep(check_interval)
+
+        # 현재 시간을 확인
+        current_time = datetime.now()
+
+        # 녹화 간격을 확인하여 녹화 시작
+        if (current_time - record_start_time).total_seconds() >= record_interval:
+            # ffmpeg를 사용하여 스트림 녹화
+            ffmpeg_cmd = ["ffmpeg", "-i", vlc_stream_url, "-c:v", "copy", "-c:a", "copy", output_file]
+            subprocess.run(ffmpeg_cmd)
+
+            # 다음 녹화를 위해 녹화 시작 시간 업데이트
+            record_start_time = datetime.now()
+//안드로이드 제어부
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- MySQL 링크 버튼 -->
+    <Button
+        android:id="@+id/mysqlButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MySQL 링크 보기" />
+
+    <!-- 스트림 버튼 -->
+    <Button
+        android:id="@+id/streamButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="스트림 보기" />
+
+</LinearLayout>
+
